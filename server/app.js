@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const os = require('os');
+require('loadavg-windows');
 const path = require('path');
 const fs = require('fs');
 const MemCache = require('./utils/public-mem-cache');
