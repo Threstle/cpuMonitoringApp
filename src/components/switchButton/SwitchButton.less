@@ -1,0 +1,62 @@
+@import (reference) "../../common.less";
+
+// ----------------------------------------------------------------------------- CONFIG
+
+@COMPONENT: SwitchButton;
+
+// ----------------------------------------------------------------------------- BLOCK
+
+.SwitchButton {
+
+  display: flex;
+  font-family: monospace;
+  align-items: center;
+// ----------------------------------------------------------------------------- ELEMENTS
+
+  &_container
+  {
+    width: 40px;
+    border: solid 2px;
+    border-radius: 50px;
+    position: relative;
+    height: 20px;
+    cursor: pointer;
+    border-color:@heavyloadColor;
+    margin-right: 15px;
+    opacity: 0.3;
+  }
+
+  &_handle
+  {
+    background-color: @heavyloadColor;
+    position: absolute;
+    width: calc(50%);
+    height: calc(100%);
+    border-radius: 60px;
+    transition: transform 0.4s ease;
+    transition-property: transform, opacity, background-color;
+
+  }
+
+  input
+  {
+    display: none;
+  }
+
+// ----------------------------------------------------------------------------- MODIFIERS
+
+  &-on
+  {
+    .@{COMPONENT}_container
+    {
+      border-color:@cpuLineColor;
+      opacity: 0.8;
+    }
+
+
+    .@{COMPONENT}_handle{
+      background-color:@cpuLineColor;
+      transform: translateX(100%);
+    }
+  }
+}

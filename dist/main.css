@@ -1,0 +1,218 @@
+.SvgGraph {
+  position: relative;
+}
+.SvgGraph_heavyLoadPeriod {
+  fill: #FF0000;
+}
+.SvgGraph_recoveryPeriod {
+  fill: #008000;
+}
+.SvgGraph_snapshot {
+  stroke: white;
+  fill: #7ebdb4;
+  stroke-width: 1px;
+  cursor: pointer;
+  transition: fill, stroke-width 0.5s ease-in-out;
+}
+.SvgGraph_snapshot-focus {
+  fill: black;
+}
+.SvgGraph_cpuLine {
+  fill: none;
+  stroke: #7ebdb4;
+}
+.SvgGraph_axis {
+  font-family: monospace;
+}
+.SvgGraph_axis path {
+  display: none;
+}
+.SvgGraph_pointer {
+  fill: red;
+  width: 3px;
+}
+.SvgGraph_tooltip {
+  background-color: white;
+  position: absolute;
+  top: 0;
+  left: 64px;
+  border: solid 1px #f2f2f2;
+  border-radius: 3px;
+  font-family: monospace;
+  text-align: center;
+}
+.SvgGraph_tooltipHour {
+  font-weight: bold;
+  padding: 4px;
+  margin: 0;
+  border-bottom: solid 1px #f2f2f2;
+}
+.SvgGraph_tooltipLoad {
+  margin: 0;
+  padding: 4px;
+  border-top: solid 1px #f5f5f5;
+  background-color: #7ebdb41a;
+}
+.SvgGraph_displayButtonsTitle {
+  font-family: monospace;
+}
+.SvgGraph_displayButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.SvgGraph_buttonSeparator {
+  width: 1px;
+  background-color: black;
+}
+.SvgGraph_axisName {
+  font-family: monospace;
+}
+.SvgGraph_axisName-cpu {
+  position: absolute;
+  top: 43%;
+  left: -5%;
+  transform: rotate(-90deg);
+}
+.SvgGraph_axisName-timeline {
+  text-align: center;
+}
+.SvgGraph-colorblind .SvgGraph_cpuLine {
+  stroke: #0088FF;
+}
+.SvgGraph-colorblind .SvgGraph_heavyLoadPeriod {
+  fill: #1E88E5;
+}
+.SvgGraph-colorblind .SvgGraph_recoveryPeriod {
+  fill: #FFC107;
+}
+
+.SwitchButton {
+  display: flex;
+  font-family: monospace;
+  align-items: center;
+}
+.SwitchButton_container {
+  width: 40px;
+  border: solid 2px;
+  border-radius: 50px;
+  position: relative;
+  height: 20px;
+  cursor: pointer;
+  border-color: #FF0000;
+  margin-right: 15px;
+  opacity: 0.3;
+}
+.SwitchButton_handle {
+  background-color: #FF0000;
+  position: absolute;
+  width: calc(50%);
+  height: calc(100%);
+  border-radius: 60px;
+  transition: transform 0.4s ease;
+  transition-property: transform, opacity, background-color;
+}
+.SwitchButton input {
+  display: none;
+}
+.SwitchButton-on .SwitchButton_container {
+  border-color: #7ebdb4;
+  opacity: 0.8;
+}
+.SwitchButton-on .SwitchButton_handle {
+  background-color: #7ebdb4;
+  transform: translateX(100%);
+}
+
+.CpuLoadGraph {
+  max-width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.CpuLoadGraph_settingsTitle {
+  font-family: monospace;
+}
+.CpuLoadGraph_settings {
+  display: flex;
+  flex-wrap: wrap;
+}
+.CpuLoadGraph_settings .SwitchButton {
+  margin-right: 15px;
+}
+.CpuLoadGraph_currentAverage {
+  font-size: 1.5em;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.CpuLoadGraph_currentAverageValue {
+  border-bottom: solid;
+}
+.CpuLoadGraph_mainBoard {
+  font-family: monospace;
+  padding: 9px;
+  color: grey;
+  margin-top: 15px;
+  margin-bottom: 25px;
+}
+.CpuLoadGraph_incidentList {
+  display: flex;
+  flex-direction: row;
+}
+
+.IncidentBox {
+  display: flex;
+  align-items: center;
+  border: solid 1px #f2f2f2;
+  color: grey;
+  text-align: center;
+  margin-bottom: 15px;
+  margin-right: 15px;
+  flex-direction: column;
+  border-radius: 5px;
+  height: fit-content;
+}
+.IncidentBox_heavyload {
+  position: relative;
+  margin: 0;
+  padding: 10px;
+}
+.IncidentBox_background {
+  top: 0;
+  left: 0;
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  opacity: 0.1;
+  transition: opacity 0.5s ease;
+}
+.IncidentBox_background-heavyload {
+  background-color: #FF0000;
+}
+.IncidentBox_background-recovery {
+  background-color: #008000;
+}
+.IncidentBox_recovery {
+  position: relative;
+  margin: 0;
+  padding: 10px;
+}
+.IncidentBox-clickable {
+  cursor: pointer;
+}
+.IncidentBox-selected {
+  color: black;
+  background: #F8F8F8;
+}
+.IncidentBox-selected .IncidentBox_background {
+  opacity: 0.3;
+}
+.IncidentBox-colorblind .IncidentBox_background-heavyload {
+  background-color: #1E88E5;
+}
+.IncidentBox-colorblind .IncidentBox_background-recovery {
+  background-color: #FFC107;
+}
+
+
+/*# sourceMappingURL=main.css.map*/

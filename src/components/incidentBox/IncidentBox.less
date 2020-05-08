@@ -1,0 +1,103 @@
+@import (reference) "../../common.less";
+
+// ----------------------------------------------------------------------------- CONFIG
+
+@COMPONENT: IncidentBox;
+
+// ----------------------------------------------------------------------------- BLOCK
+
+.IncidentBox {
+
+  display: flex;
+  align-items: center;
+  border: solid 1px @lightGreyColor;
+  color: grey;
+  text-align: center;
+  margin-bottom: 15px;
+  margin-right: 15px;
+  flex-direction: column;
+  border-radius: 5px;
+  height: fit-content;
+
+// ----------------------------------------------------------------------------- HELPERS
+
+  &_heavyload
+  {
+    position: relative;
+    margin: 0;
+    padding: 10px;
+  }
+
+  &_background
+  {
+    top:0;
+    left: 0;
+    content:'';
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    opacity: 0.1;
+    transition: opacity 0.5s ease;
+
+    &-heavyload
+    {
+      background-color: @heavyloadColor;
+    }
+
+    &-recovery
+    {
+      background-color: @recoveryColor;
+    }
+  }
+
+
+
+
+  &_recovery
+  {
+    position: relative;
+    margin: 0;
+    padding: 10px;
+
+  }
+
+// ----------------------------------------------------------------------------- MODIFIERS
+
+
+
+  &-clickable
+  {
+    cursor:pointer;
+
+  }
+
+  &-selected
+  {
+    color:black;
+    background: #F8F8F8;
+
+    .@{COMPONENT}_background
+    {
+      opacity: 0.3;
+    }
+  }
+
+  &-colorblind
+  {
+    .@{COMPONENT}_background {
+
+      &-heavyload
+      {
+        background-color: @heavyloadColorBlind;
+      }
+
+      &-recovery
+      {
+        background-color: @recoveryColorBlind;
+      }
+
+    }
+  }
+
+}
+

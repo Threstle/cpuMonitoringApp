@@ -1,0 +1,69 @@
+
+// ----------------------------------------------------------------------------- CONFIG
+
+//Component name
+@COMPONENT: CpuLoadGraph;
+.CpuLoadGraph
+{
+// ----------------------------------------------------------------------------- BLOCK
+
+  max-width: 1024px;
+  margin-left: auto;
+  margin-right: auto;
+
+
+// ----------------------------------------------------------------------------- ELEMENTS
+  &_settingsTitle
+  {
+    font-family: monospace;
+  }
+
+  &_settings
+  {
+    display: flex;
+    flex-wrap: wrap;
+
+    .SwitchButton{
+      margin-right: 15px;
+    }
+
+  }
+
+  &_currentAverage
+  {
+    font-size: 1.5em;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  &_currentAverageValue
+  {
+    border-bottom: solid;
+  }
+
+  &_mainBoard
+  {
+    font-family: monospace;
+    padding: 9px;
+    color: grey;
+    margin-top: 15px;
+    margin-bottom: 25px;
+  }
+
+  &_incidentList
+  {
+    display: flex;
+    flex-direction: row;
+  }
+
+}
+
+
+
+// ----------------------------------------------------------------------------- MODIFIERS
+
+
+// ----------------------------------------------------------------------------- CHILDREN
+
+// ----------------------------------------------------------------------------- PATCHES
+
