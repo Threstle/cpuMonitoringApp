@@ -1,4 +1,4 @@
-
+@import (reference) "../../common.less";
 // ----------------------------------------------------------------------------- CONFIG
 
 //Component name
@@ -29,6 +29,26 @@
 
   }
 
+  &_cpuLoadSetting
+  {
+    margin-top: 15px;
+    width: 100%;
+  }
+
+  &_cpuLoadSettingInput
+  {
+    border-radius: 10px;
+    box-shadow: none;
+    border: 3px solid @cpuLineColor;
+    padding: 3px;
+  }
+
+  &_cpuLoadSettingLabel
+  {
+    font-family: monospace;
+    margin-left: 12px;
+  }
+
   &_currentAverage
   {
     font-size: 1.5em;
@@ -45,12 +65,11 @@
   {
     font-family: monospace;
     padding: 9px;
-    color: grey;
     margin-top: 15px;
     margin-bottom: 25px;
   }
 
-  &_incidentList
+  &_alertList
   {
     display: flex;
     flex-direction: row;

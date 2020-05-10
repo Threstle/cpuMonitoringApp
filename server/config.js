@@ -16,11 +16,11 @@ let config = {
     cpuWatch:{
         bufferTime: 120,
 
-        heavyload_threshold: 1,
+        heavyload_threshold: 0.6,
 
-        heavyload_duration: 120000,
+        heavyload_duration: 1200,
 
-        recovery_duration: 120000,
+        recovery_duration: 1200,
 
         timeline_length: 600000
     }

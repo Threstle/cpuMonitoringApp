@@ -17,6 +17,9 @@ echo 'Install dependencies server'
 cd server
 npm i
 echo 'Done.'
+echo 'Launch tests'
+npm run test
+echo 'Done.'
 echo 'Launch server'
 node app.js
 echo 'Done'

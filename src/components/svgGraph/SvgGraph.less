@@ -31,8 +31,12 @@
     &-focus
     {
       fill:black;
-      //stroke-width: 7px;
-    //  transform: scale(4);
+
+    }
+
+    &-peak
+    {
+      fill: blueviolet;
     }
   }
 
@@ -44,7 +48,6 @@
 
   &_axis
   {
-    //color:@lightGreyColor;
     font-family: monospace;
 
     path
@@ -53,11 +56,6 @@
     }
   }
 
-  &_pointer
-  {
-    fill:@pointerColor;
-    width: 3px;
-  }
 
   &_tooltip
   {
@@ -69,6 +67,10 @@
     border-radius: 3px;
     font-family: monospace;
     text-align: center;
+
+    @media (orientation: portrait){
+      display: none;
+    }
   }
 
   &_tooltipHour
@@ -110,7 +112,7 @@
   &_axisName
   {
     font-family: monospace;
-
+    font-size: 1em;
     &-cpu
     {
       position: absolute;
@@ -118,6 +120,10 @@
       top:43%;
       left:-5%;
       transform: rotate(-90deg);
+
+      @media (orientation: portrait){
+        display: none;
+      }
     }
 
     &-timeline

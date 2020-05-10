@@ -1,62 +1,24 @@
-import React, {Fragment, useEffect, useRef, useState} from 'react';
-import {IConfig, IIncident, IPeriod, ISnapshot} from "../../helpers/CpuLoadHelper";
+import React, {ChangeEvent, Fragment, useEffect, useRef, useState} from 'react';
+import {IAlert, IConfig,ISnapshot} from "../../helpers/CpuLoadHelper";
 import SvgGraph from "../svgGraph/SvgGraph";
 import './CpuLoadGraph.less';
 import SwitchButton from "../switchButton/SwitchButton";
-import {usePrevious} from "../../hooks/usePrevious";
-import {TimeHelper} from "../../helpers/TimeHelper";
-import IncidentBox from "../incidentBox/IncidentBox";
+import TimeHelper from "../../helpers/TimeHelper";
+import AlertBox from "../alertBox/AlertBox";
+
 interface IProps {
-  classNames?: string[]
+  classNames?: string[];
+  // snapshot history over a period of 10mn
   snapshots:ISnapshot[];
-  incidents:IIncident[];
+  // alert history over a period of 10mn
+  cpuAlerts:IAlert[];
+  // size of the graph
   size:any;
-  timelineBounds:number[]
-  cpuAlert:string;
+  // timestamps of the first and last snapshot [first,last]
+  timelineBounds:number[];
+  // string containing either heavyload/recovery or nothing. Used to trigger an alert (by changing document.title and playing a sound (if authorized).
+  alertTrigger:string;
   config:IConfig;
-}
-
-interface IEvent
-{
-    type:EEventType,
-    timestamp:number
-}
-
-enum EEventType
-{
-    HEAVYLOAD_START,
-    RECOVERY_START,
-        RECOVERY_END
-}
-
-enum EPeriodType
-{
-    HEAVYLOAD,
-    RECOVERY
-}
-
-enum ELogsDisplayType
-{
-    EVENTS,
-    PERIODS
-}
-
-//FIXME
-const text = {
-    events:[
-        "CPU is now on heavy load",
-        "CPU is starting recovery",
-        "CPU has recovered from heavy load",
-    ],
-    logsDisplayType:[
-        "See event logs",
-        "See incidents logs"
-    ],
-    period:[
-        "Heavy load",
-        "Recovery"
-    ]
-
 }
 
 const componentName = "CpuLoadGraph";
@@ -70,16 +32,14 @@ function CpuLoadGraph (props: IProps) {
   const recoveryAudioRef = useRef<HTMLAudioElement>(null);
   const heavyloadAudioRef = useRef<HTMLAudioElement>(null);
 
-  const [selectedIncident, setSelectedIncident] = useState<IIncident>();
-  const [selectedLogsDisplayType, setSelectedLogsDisplayType] = useState<ELogsDisplayType>(ELogsDisplayType.EVENTS);
-  const [selectedSnapshot, setSelectedSnapshot] = useState<ISnapshot>();
+  const [selectedAlert, setSelectedAlert] = useState<IAlert>();
+  const [maxLoad, setMaxLoad] = useState<number>(2);
+  const [minLoad, setMinLoad] = useState<number>(0);
   const [highestLoad, setHighestLoad] = useState<ISnapshot>();
   const [lowestLoad, setLowestLoad] = useState<ISnapshot>();
 
   const [colorBlindMode, setColorBlindMode] = useState<boolean>(false);
   const [soundAlertOn, setSoundAlertOn] = useState<boolean>(false);
-
-  const prevCount:IIncident[] = usePrevious(props.incidents);
 
 
 
@@ -87,46 +47,53 @@ function CpuLoadGraph (props: IProps) {
 
     useEffect(()=>{
 
-        setHighestLoad(Math.max.apply(Math, props.snapshots.map(function(snapshot) { ;return snapshot.load; })));
-        setLowestLoad(Math.min.apply(Math, props.snapshots.map(function(snapshot) { ;return snapshot.load; })));
+        setHighestLoad(Math.max.apply(Math, props.snapshots.map(function(snapshot) { return snapshot.load; })));
+        setLowestLoad(Math.min.apply(Math, props.snapshots.map(function(snapshot) { return snapshot.load; })));
 
     },[props.snapshots])
 
+    /**
+     * If alertTrigger is updated, read it and trigger the appropriated alert
+     */
     useEffect(()=>{
 
-        console.log(heavyloadAudioRef.current);
-        if(props.cpuAlert == "heavyload")
+        if(props.alertTrigger == "heavyload")
         {
             beginAlert("(!) Heavy load");
             if(soundAlertOn)heavyloadAudioRef.current.play();
 
         }
-        if(props.cpuAlert == "recovery"){
+        if(props.alertTrigger == "recovery"){
             beginAlert("(!) Recovered");
             if(soundAlertOn)recoveryAudioRef.current.play();
         }
 
-    },[props.cpuAlert])
-
-    useEffect(()=>{
-    },[colorBlindMode])
+    },[props.alertTrigger]);
 
   // --------------------------------------------------------------------------- UTILS
 
-    const beginAlert = (pTitle:string)=>{
+    /**
+     * Launch alert
+     * @param text to update document.title with
+     */
+    const beginAlert = (pTitle:string,pCounter=5)=>{
         let oldTitle = document.title;
-        proceedAlert(5,oldTitle,pTitle);
+        updateAlert(pCounter,oldTitle,pTitle);
 
     }
 
-    const proceedAlert = (pCounter:number,pOriginalTitle:string,pTitle:string)=>{
+    /**
+     * Update alert
+     * @param text to update document.title with
+     */
+    const updateAlert = (pCounter:number,pOriginalTitle:string,pTitle:string)=>{
         document.title = pOriginalTitle
 
         if(pCounter>0)
         {
             setTimeout(()=>{
                 document.title = pTitle
-                setTimeout(() =>proceedAlert(pCounter-1,pOriginalTitle,pTitle),500);
+                setTimeout(() =>updateAlert(pCounter-1,pOriginalTitle,pTitle),500);
             },500)
         }
         else
@@ -135,41 +102,17 @@ function CpuLoadGraph (props: IProps) {
         }
     }
 
-    const getEventsFromIncidents = (pIncidents:IIncident[])=>{
-        let events:IEvent[]= [];
+    // --------------------------------------------------------------------------- HANDLERS
 
-        pIncidents.forEach((incident)=>{
-            events.push({type:EEventType.HEAVYLOAD_START,timestamp:incident.heavyload.start});
-            if(incident.recovery)
-            {
-                events.push({type:EEventType.RECOVERY_START,timestamp:incident.recovery.start});
-                events.push({type:EEventType.RECOVERY_END,timestamp:incident.recovery.end});
-            }
-        });
-
-        return events;
+    const onMinLoadChange = (e:any)=>{
+        let newMin = parseFloat(e.target.value);
+        if(newMin<=maxLoad) setMinLoad( parseFloat(e.target.value));
     }
 
-    const getSnapshotFromTimestamp = (pTimestamp:number)=>{
-        return props.snapshots.filter((snapshot)=>{
-            return snapshot.timestamp == pTimestamp
-        })[0]
+    const onMaxLoadChange = (e:any)=>{
+        let newMax = parseFloat(e.target.value);
+        if(newMax>=minLoad) setMaxLoad( parseFloat(e.target.value));
     }
-
-    const getPeriodsFromIncidents = (pIncidents:IIncident[])=>{
-        let periods:any = [];
-
-        pIncidents.forEach((incident)=>{
-            periods.push({type:EPeriodType.HEAVYLOAD,period:incident.heavyload});
-            if(incident.recovery)
-            {
-                periods.push({type:EPeriodType.RECOVERY,period:incident.recovery});
-            }
-        });
-
-        return periods;
-    }
-
 
 
     // --------------------------------------------------------------------------- RENDER
@@ -178,15 +121,14 @@ function CpuLoadGraph (props: IProps) {
         <SvgGraph
             modifiers={[colorBlindMode?"colorblind":""]}
             snapshots={props.snapshots}
-            incidents={props.incidents}
+            cpuAlerts={props.cpuAlerts}
+            maxLoad={maxLoad}
+            minLoad={minLoad}
             size={props.size}
             config={props.config}
             timelineBounds={props.timelineBounds}
-            selectedIncident={selectedIncident}
-            selectedSnapshot={selectedSnapshot}
-            onHoverGraph={(snapshot:ISnapshot)=>{
-                setSelectedSnapshot(snapshot)
-            }}
+            selectedAlert={selectedAlert}
+
         />
         <h2 className={`${componentName}_settingsTitle`}>Settings</h2>
         <div className={`${componentName}_settings`}>
@@ -202,6 +144,42 @@ function CpuLoadGraph (props: IProps) {
                     setSoundAlertOn(state);
                 }}
             />
+            <div className={`${componentName}_cpuLoadSetting`}>
+                <input
+                    className={`${componentName}_cpuLoadSettingInput`}
+                    type="number"
+                    id="maxCpuLoadRange"
+                    name="maxCpuLoadRange"
+                    min={0}
+                    step={0.5}
+                    value={maxLoad}
+                    onChange={onMaxLoadChange}
+                />
+                <label
+                    htmlFor={"cpuLoadRange"}
+                    className={`${componentName}_cpuLoadSettingLabel`}
+                >
+                    Max CPU Load
+                </label>
+            </div>
+            <div className={`${componentName}_cpuLoadSetting`}>
+                <input
+                    className={`${componentName}_cpuLoadSettingInput`}
+                    type="number"
+                    id="minCpuLoadRange"
+                    name="minCpuLoadRange"
+                    min={0}
+                    step={0.5}
+                    value={minLoad}
+                    onChange={onMinLoadChange}
+                />
+                <label
+                    htmlFor={"cpuLoadRange"}
+                    className={`${componentName}_cpuLoadSettingLabel`}
+                >
+                    Min CPU Load
+                </label>
+            </div>
         </div>
         {
             props.snapshots && props.snapshots.length > 0 &&
@@ -220,18 +198,18 @@ function CpuLoadGraph (props: IProps) {
                         <p>{`Lowest load was ${lowestLoad}`}</p>
                     }
                     {
-                        props.incidents &&
+                        props.cpuAlerts &&
                         <Fragment>
-                            <p>{`Number of incident from ${TimeHelper.instance.timestampToDate(props.timelineBounds[0])} to ${TimeHelper.instance.timestampToDate(props.timelineBounds[1])} : ${props.incidents.length}`}</p>
-                            <div className={`${componentName}_incidentList`}>
+                            <p>{`Number of alerts from ${TimeHelper.instance.timestampToDate(props.timelineBounds[0])} to ${TimeHelper.instance.timestampToDate(props.timelineBounds[1])} : ${props.cpuAlerts.length}`}</p>
+                            <div className={`${componentName}_alertList`}>
                             {
-                                props.incidents.map((incident,index)=>{
-                                    return <IncidentBox
+                                props.cpuAlerts.map((alertElement,index)=>{
+                                    return <AlertBox
                                         key={index}
                                         modifiers={[colorBlindMode?"-colorblind":""]}
-                                        onClick={()=>setSelectedIncident(incident)}
-                                        isSelected={selectedIncident == incident}
-                                        incident={incident}
+                                        onClick={()=>setSelectedAlert(alertElement)}
+                                        isSelected={selectedAlert == alertElement}
+                                        cpuAlert={alertElement}
                                     />
                                 })
                             }

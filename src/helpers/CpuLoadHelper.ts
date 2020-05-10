@@ -10,7 +10,7 @@ export interface IPeriod
     end:number;
 }
 
-export interface IIncident {
+export interface IAlert {
     heavyload:IPeriod,
     recovery?:IPeriod;
 }
@@ -20,7 +20,8 @@ export interface IConfig {
     heavyload_threshold:number,
     heavyload_duration:number,
     recovery_duration:number,
-    timeline_length:number
+    timeline_length:number,
+
 }
 
 
@@ -40,8 +41,6 @@ export class CpuLoadHelper {
         return CpuLoadHelper.__instance;
     }
 
-    // --------------------------------------------------------------------------- SET MODEL
-
     // --------------------------------------------------------------------------- COMMUNICATION API
 
 
@@ -52,7 +51,7 @@ export class CpuLoadHelper {
 
     //FIXME: add error handling
     public fetchCpuData (pCallback:(Snapshots:ISnapshot[],
-                                    Incidents:IIncident[],
+                                    cpuAlerts:IAlert[],
                                     timelineBounds:number[],
                                     cpuAlert:string)=>void,pErrorCallback:()=>void){
         fetch(
@@ -62,8 +61,7 @@ export class CpuLoadHelper {
                 return response.json();
             })
             .then(response => {
-                console.log(response);
-                pCallback(response.snapshots,response.incidents,response.timelineBounds,response.cpuAlert);
+                pCallback(response.snapshots,response.cpuAlerts,response.timelineBounds,response.cpuAlert);
             })
             .catch(() => {
                 pErrorCallback();
@@ -85,15 +83,6 @@ export class CpuLoadHelper {
                 pErrorCallback();
 
             });
-    }
-
-
-    // --------------------------------------------------------------------------- UTILS
-
-    //FIXME
-    public isSamePeriod(pPeriodA:IPeriod,pPeriodB:IPeriod)
-    {
-        return pPeriodA.start <= pPeriodB?.start && pPeriodA.end >= pPeriodB?.end
     }
 
 

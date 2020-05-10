@@ -17,6 +17,9 @@
 .SvgGraph_snapshot-focus {
   fill: black;
 }
+.SvgGraph_snapshot-peak {
+  fill: blueviolet;
+}
 .SvgGraph_cpuLine {
   fill: none;
   stroke: #7ebdb4;
@@ -27,10 +30,6 @@
 .SvgGraph_axis path {
   display: none;
 }
-.SvgGraph_pointer {
-  fill: red;
-  width: 3px;
-}
 .SvgGraph_tooltip {
   background-color: white;
   position: absolute;
@@ -40,6 +39,11 @@
   border-radius: 3px;
   font-family: monospace;
   text-align: center;
+}
+@media (orientation: portrait) {
+  .SvgGraph_tooltip {
+    display: none;
+  }
 }
 .SvgGraph_tooltipHour {
   font-weight: bold;
@@ -67,12 +71,18 @@
 }
 .SvgGraph_axisName {
   font-family: monospace;
+  font-size: 1em;
 }
 .SvgGraph_axisName-cpu {
   position: absolute;
   top: 43%;
   left: -5%;
   transform: rotate(-90deg);
+}
+@media (orientation: portrait) {
+  .SvgGraph_axisName-cpu {
+    display: none;
+  }
 }
 .SvgGraph_axisName-timeline {
   text-align: center;
@@ -91,6 +101,7 @@
   display: flex;
   font-family: monospace;
   align-items: center;
+  margin: 3px;
 }
 .SwitchButton_container {
   width: 40px;
@@ -139,6 +150,20 @@
 .CpuLoadGraph_settings .SwitchButton {
   margin-right: 15px;
 }
+.CpuLoadGraph_cpuLoadSetting {
+  margin-top: 15px;
+  width: 100%;
+}
+.CpuLoadGraph_cpuLoadSettingInput {
+  border-radius: 10px;
+  box-shadow: none;
+  border: 3px solid #7ebdb4;
+  padding: 3px;
+}
+.CpuLoadGraph_cpuLoadSettingLabel {
+  font-family: monospace;
+  margin-left: 12px;
+}
 .CpuLoadGraph_currentAverage {
   font-size: 1.5em;
   margin-top: 10px;
@@ -150,16 +175,15 @@
 .CpuLoadGraph_mainBoard {
   font-family: monospace;
   padding: 9px;
-  color: grey;
   margin-top: 15px;
   margin-bottom: 25px;
 }
-.CpuLoadGraph_incidentList {
+.CpuLoadGraph_alertList {
   display: flex;
   flex-direction: row;
 }
 
-.IncidentBox {
+.AlertBox {
   display: flex;
   align-items: center;
   border: solid 1px #f2f2f2;
@@ -171,12 +195,13 @@
   border-radius: 5px;
   height: fit-content;
 }
-.IncidentBox_heavyload {
+.AlertBox_heavyload {
   position: relative;
   margin: 0;
-  padding: 10px;
+  width: 100%;
+  padding: 10px 0px;
 }
-.IncidentBox_background {
+.AlertBox_background {
   top: 0;
   left: 0;
   content: '';
@@ -186,31 +211,32 @@
   opacity: 0.1;
   transition: opacity 0.5s ease;
 }
-.IncidentBox_background-heavyload {
+.AlertBox_background-heavyload {
   background-color: #FF0000;
 }
-.IncidentBox_background-recovery {
+.AlertBox_background-recovery {
   background-color: #008000;
 }
-.IncidentBox_recovery {
+.AlertBox_recovery {
   position: relative;
   margin: 0;
-  padding: 10px;
+  width: 100%;
+  padding: 10px 0px;
 }
-.IncidentBox-clickable {
+.AlertBox-clickable {
   cursor: pointer;
 }
-.IncidentBox-selected {
+.AlertBox-selected {
   color: black;
   background: #F8F8F8;
 }
-.IncidentBox-selected .IncidentBox_background {
+.AlertBox-selected .AlertBox_background {
   opacity: 0.3;
 }
-.IncidentBox-colorblind .IncidentBox_background-heavyload {
+.AlertBox-colorblind .AlertBox_background-heavyload {
   background-color: #1E88E5;
 }
-.IncidentBox-colorblind .IncidentBox_background-recovery {
+.AlertBox-colorblind .AlertBox_background-recovery {
   background-color: #FFC107;
 }
 

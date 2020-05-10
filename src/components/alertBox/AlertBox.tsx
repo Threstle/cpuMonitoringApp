@@ -1,21 +1,20 @@
 import React from 'react';
-import './IncidentBox.less';
-import {IIncident} from "../../helpers/CpuLoadHelper";
-import {TimeHelper} from "../../helpers/TimeHelper";
+import './AlertBox.less';
+import {IAlert} from "../../helpers/CpuLoadHelper";
+import TimeHelper from "../../helpers/TimeHelper";
 interface IProps {
   modifiers?: string[]
   onClick?: ()=>void;
   isSelected?: boolean;
-  incident:IIncident;
+  cpuAlert:IAlert;
 }
 
-const componentName = "IncidentBox";
+const componentName = "AlertBox";
 
 /**
- * @name IncidentBox
+ * @name AlertBox
  */
-function IncidentBox (props: IProps) {
-  // --------------------------------------------------------------------------- PREPARE
+function AlertBox (props: IProps) {
 
   // --------------------------------------------------------------------------- RENDER
 
@@ -29,19 +28,19 @@ function IncidentBox (props: IProps) {
       onClick={props.onClick}
   >
       <p className={`${componentName}_heavyload`}>
-          {`Went into heavy load at ${TimeHelper.instance.timestampToDate(props.incident.heavyload.start)}`}
+          {`Went into heavy load at ${TimeHelper.instance.timestampToDate(props.cpuAlert.heavyload.start)}`}
           <span className={`${componentName}_background ${componentName}_background-heavyload`}/>
       </p>
       {
-          props.incident.recovery &&
+          props.cpuAlert.recovery &&
           <p
             className={`${componentName}_recovery`}
           >
-              {`Recovered from ${TimeHelper.instance.timestampToDate(props.incident.recovery.start)} to ${TimeHelper.instance.timestampToDate(props.incident.recovery.end)}`}
+              {`Recovered from ${TimeHelper.instance.timestampToDate(props.cpuAlert.recovery.start)} to ${TimeHelper.instance.timestampToDate(props.cpuAlert.recovery.end)}`}
               <span className={`${componentName}_background ${componentName}_background-recovery`}/>
           </p>
       }
   </div>
 }
 
-export default IncidentBox
+export default AlertBox

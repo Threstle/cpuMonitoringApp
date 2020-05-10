@@ -9,7 +9,8 @@
         "target": "es5",
         "jsx": "react",
       "types": [
-        "webpack-env"
+        "webpack-env",
+        "jest"
       ]
     }
 }

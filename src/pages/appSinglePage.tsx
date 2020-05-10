@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {CpuLoadHelper, IConfig, IIncident, ISnapshot} from "../helpers/CpuLoadHelper";
+import {CpuLoadHelper, IAlert, IConfig, ISnapshot} from "../helpers/CpuLoadHelper";
 import CpuLoadGraph from "../components/cpuLoadGraph/CpuLoadGraph";
 
 interface IProps {}
@@ -15,16 +15,17 @@ function AppSinglePage (props: IProps) {
     const rootRef = useRef<HTMLDivElement>(null);
 
     // DATAS STATES
-    const [cpuLoadHistory, setCpuLoadHistory] = useState<ISnapshot[]>([]);
-    const [cpuIncidentHistory, setCpuIncidentHistory] = useState<IIncident[]>([]);
+    const [snapshots, setSnapshots] = useState<ISnapshot[]>([]);
+    const [cpuAlerts, setCpuAlerts] = useState<IAlert[]>([]);
     const [timelineBounds, setTimelineBounds] = useState<number[]>([Date.now()-600000,Date.now()]);
-    const [cpuAlert, setCpuAlert] = useState<string>("");
+    const [alertTrigger, setAlertTrigger] = useState<string>("");
 
     const [config,setConfig] = useState<IConfig>(null);
     // -------------------–-------------------–-------------------–--------------- REGISTER PAGE
 
-    //FIXME: refacto
-
+    /**
+     * Fetch config
+     */
     useEffect(()=>{
         CpuLoadHelper.instance.fetchConfig((config:IConfig)=>{
             setConfig(config);
@@ -32,13 +33,16 @@ function AppSinglePage (props: IProps) {
         },()=>{})
     },[]);
 
+    /**
+     * Fetch datas every 10 secondes
+     */
     const refreshCpuHistory = ()=>{
 
-        CpuLoadHelper.instance.fetchCpuData((snapshots:ISnapshot[],incidents:IIncident[],timelineBounds:number[],cpuAlertString)=>{
-            setCpuLoadHistory(snapshots);
-            setCpuIncidentHistory(incidents);
+        CpuLoadHelper.instance.fetchCpuData((snapshots:ISnapshot[],alerts:IAlert[],timelineBounds:number[],cpuAlertString)=>{
+            setSnapshots(snapshots);
+            setCpuAlerts(alerts);
             setTimelineBounds(timelineBounds);
-            setCpuAlert(cpuAlertString);
+            setAlertTrigger(cpuAlertString);
         },()=>{})
 
         setTimeout(refreshCpuHistory,10000);
@@ -51,10 +55,10 @@ function AppSinglePage (props: IProps) {
         {
             config &&
             <CpuLoadGraph
-                snapshots={cpuLoadHistory}
-                incidents={cpuIncidentHistory}
+                snapshots={snapshots}
+                cpuAlerts={cpuAlerts}
                 timelineBounds={timelineBounds}
-                cpuAlert={cpuAlert}
+                alertTrigger={alertTrigger}
                 size={{w:1000,h:500,margin:{left:75,bottom:75}}}
                 config={config}/>
         }

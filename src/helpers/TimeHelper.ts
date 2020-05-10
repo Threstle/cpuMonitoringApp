@@ -1,5 +1,5 @@
 
-export class TimeHelper {
+export default class TimeHelper {
 
     protected static __instance: TimeHelper;
 

@@ -1,22 +1,25 @@
-import React, {Component, Fragment, useEffect, useRef, useState} from 'react';
-import {CpuLoadHelper, IConfig, IIncident, IPeriod, ISnapshot} from "../../helpers/CpuLoadHelper";
+import React, {Fragment, useEffect, useRef, useState} from 'react';
+import {IAlert, IConfig, ISnapshot} from "../../helpers/CpuLoadHelper";
 import d3 from '../../d3importer';
 import {gsap,Quad} from 'gsap';
 
 import './SvgGraph.less';
-import {TimeHelper} from "../../helpers/TimeHelper";
+import TimeHelper from "../../helpers/TimeHelper";
 import SwitchButton from "../switchButton/SwitchButton";
 
 interface IProps {
   modifiers?: string[];
+  // snapshot history over a period of 10mn
   snapshots: ISnapshot[];
+  // size of the graph
   size: any;
+  maxLoad:number;
+  minLoad:number;
   config: IConfig;
   timelineBounds:number[];
-  incidents: IIncident[];
-  selectedSnapshot:ISnapshot
-  selectedIncident: IIncident;
-  onHoverGraph:(snapshot:ISnapshot)=>void;
+  // alert history over a period of 10mn
+  cpuAlerts: IAlert[];
+  selectedAlert: IAlert;
 }
 
 const componentName = "SvgGraph";
@@ -27,11 +30,13 @@ const componentName = "SvgGraph";
 
 function SvgGraph (props: IProps) {
 
+    // ------- REFS
     const graphRef = useRef(null);
     const cpuLineRef = useRef<SVGPathElement>(null);
     const pointerRef = useRef(null);
     const tooltipRef = useRef(null);
 
+    // ------- STATES
     const [focusSnapshot, setFocusSnapshot] = useState<ISnapshot>(null);
 
     const [displayHeavyLoadPeriods, setDisplayHeavyLoadPeriods] = useState<boolean>(true);
@@ -40,6 +45,7 @@ function SvgGraph (props: IProps) {
     const [displayCpuLine, setDisplayCpuLine] = useState<boolean>(true);
     const [displayThreshold, setDisplayThreshold] = useState<boolean>(true);
 
+    // Selected snapshots to display on graph
     const [peaks, setPeaks] = useState<ISnapshot[]>([]);
 
 
@@ -47,58 +53,51 @@ function SvgGraph (props: IProps) {
   // --------------------------------------------------------------------------- PREPARE
 
     useEffect(()=>{
-        const svg = d3.select(graphRef.current);
+
         if(!props.snapshots || props.snapshots.length == 0)return;
 
+
+        // Get a list of key snapshots to display on graph
+        setPeaks(props.snapshots.filter((snapshot,index)=>isPeak(props.snapshots,index,)));
+
+
+    },[props.snapshots]);
+
+    useEffect(()=>{
+
+        const svg = d3.select(graphRef.current);
+
+        // Add axises on component mount
         d3.selectAll(`.${componentName}_axis`).remove();
 
-        const y = d3.scaleLinear()
-            .domain([0, 2])
-            .range([ props.size.h, 0 ]);
-
         svg.append("g").attr('class',`${componentName}_axis ${componentName}_axis-y`)
-            .call(d3.axisLeft(y));
-
-        const x = d3.scaleTime()
-            .domain([props.timelineBounds[0],props.timelineBounds[1]])
-            .range([ 0, props.size.w ]);
+            .call(d3.axisLeft(getYFromLoad));
 
         svg.append("g").attr('class',`${componentName}_axis ${componentName}_axis-x`)
             .attr("transform", "translate(0," + (props.size.h+15) + ")")
-            .call(d3.axisBottom(x));
-
-        setPeaks(props.snapshots.filter((snapshot,index)=>isPeak(props.snapshots,index,2,1)));
-
-        props.snapshots.forEach((snapshot)=>{
-
-        })
-
-
-    },[props.snapshots])
-
-    useEffect(()=>{
-        setFocusSnapshot(props.selectedSnapshot)
-    },[props.selectedSnapshot])
+            .call(d3.axisBottom(getXFromTimestamp));
+    },[props.maxLoad,props.minLoad])
 
     useEffect(()=>{
         if(focusSnapshot)animateFocus();
-    },[focusSnapshot])
+    },[focusSnapshot]);
 
     // --------------------------------------------------------------------------- ANIMATION
 
+    /**
+     * Animate tooltip when selected snapshot is chosen
+     **/
     const animateFocus = ()=>{
 
-        let graphOffsets = graphRef.current.getBoundingClientRect();
-
         gsap.to(pointerRef.current,{
-            x:getXFromTimestamp(props.snapshots,focusSnapshot.timestamp),
+            x:getXFromTimestamp(focusSnapshot.timestamp),
             ease:Quad.easeInOut,
             duration:0.3
         })
 
         gsap.to(tooltipRef.current,{
-            x:getXFromTimestamp(props.snapshots,focusSnapshot.timestamp)-tooltipRef.current.getBoundingClientRect().width,
-            y:getYFromLoad(props.snapshots,focusSnapshot.load)-tooltipRef.current.getBoundingClientRect().height,
+            x:getXFromTimestamp(focusSnapshot.timestamp)-tooltipRef.current.getBoundingClientRect().width,
+            y:getYFromLoad(focusSnapshot.load)-tooltipRef.current.getBoundingClientRect().height,
             ease:Quad.easeInOut,
             duration:0.3
         })
@@ -106,50 +105,35 @@ function SvgGraph (props: IProps) {
 
     // --------------------------------------------------------------------------- UTILS
 
-    const getYFromLoad = (pData:ISnapshot[],pValue:number)=>{
-        return d3.scaleLinear().domain([0, 2]).range([ props.size.h, 0 ])(pValue);
-    }
+    const getYFromLoad = d3.scaleLinear().domain([props.minLoad, props.maxLoad]).range([ props.size.h, 0 ])
 
-    const getXFromTimestamp = (pData:ISnapshot[],pValue:number)=>{
-        return d3.scaleTime().domain([props.timelineBounds[0],props.timelineBounds[1]]).range([ 0, props.size.w ])(pValue);
-    }
+    const getXFromTimestamp = d3.scaleTime().domain([props.timelineBounds[0],props.timelineBounds[1]]).range([ 0, props.size.w ]);
 
-    const isPeak = (pSnapshots:ISnapshot[],pIndex:number,pPrecision:number,pLimit:number)=>{
+    /**
+     * Detect when cpuload changes direction
+     * pSnapshots : snapshot array
+     * pIndex : index in pSnapshots of the snapshot analyzed
+     * */
+    const isPeak = (pSnapshots:ISnapshot[],pIndex:number)=>{
 
         pSnapshots = pSnapshots.slice();
 
+        if(!pSnapshots[pIndex-1] || !pSnapshots[pIndex+1])return false;
 
-        if(!pSnapshots[pIndex-pPrecision] || !pSnapshots[pIndex+pPrecision])return false;
-
-
+        // Detect if the snapshot is a peak
         let peak = (pSnapshots[pIndex-1]?.load > pSnapshots[pIndex]?.load &&  pSnapshots[pIndex+1]?.load > pSnapshots[pIndex]?.load)
                     || ((pSnapshots[pIndex-1]?.load < pSnapshots[pIndex]?.load &&  pSnapshots[pIndex+1]?.load < pSnapshots[pIndex]?.load));
 
-        if(peak)
-        {
-
-            let sample = pSnapshots.slice(pIndex-pPrecision,pIndex+pPrecision);
-
-            let m = 0;
-            sample.forEach((snapshot)=>{m+=snapshot.load});
-            m/=sample.length;
-
-            let vTemp=sample.map((snapshot)=>{return (snapshot.load-m)*(snapshot.load-m)});
-
-            let v = vTemp.reduce((a,b)=>{return a+b})/sample.length;
-
-            return pSnapshots[pIndex].load > m+(v*pLimit) || pSnapshots[pIndex].load > m-(v*pLimit);
-        }
-        else
-        {
-            return false;
-        }
+        return peak;
 
     }
 
 
     // --------------------------------------------------------------------------- HANDLERS
 
+    /**
+     * Set selectedSnapshot to one of the peaks when user hovers over the graph
+     **/
     const onMouseMove = (e:any)=>{
 
         let graphOffsets = graphRef.current.getBoundingClientRect();
@@ -199,38 +183,41 @@ function SvgGraph (props: IProps) {
                       opacity={0.3}
                       x1={0}
                       x2={props.size.w}
-                      y1={getYFromLoad(props.snapshots,props.config.heavyload_threshold)}
-                      y2={getYFromLoad(props.snapshots,props.config.heavyload_threshold)}
+                      y1={getYFromLoad(props.config.heavyload_threshold)}
+                      y2={getYFromLoad(props.config.heavyload_threshold)}
                   />
               }
               {
-                  props.incidents &&
+                  props.cpuAlerts &&
                   <g
                   >
                       {
-                          props.incidents.map((incident)=>{
+                          props.cpuAlerts.map((cpuAlert,index)=>{
 
-                              return <Fragment>
+                              return <Fragment
+                                  key={index}
+                              >
                                   {
                                       displayHeavyLoadPeriods &&
                                       <rect
+
                                           className={`${componentName}_heavyLoadPeriod`}
-                                          x={getXFromTimestamp(props.snapshots,incident.heavyload.start)}
+                                          x={getXFromTimestamp(cpuAlert.heavyload.start)}
                                           y={0}
-                                          opacity={(incident == props.selectedIncident)?0.5:0.2}
-                                          width={getXFromTimestamp(props.snapshots,incident.heavyload.end) - getXFromTimestamp(props.snapshots,incident.heavyload.start)}
+                                          opacity={(cpuAlert == props.selectedAlert)?0.5:0.2}
+                                          width={getXFromTimestamp(cpuAlert.heavyload.end) - getXFromTimestamp(cpuAlert.heavyload.start)}
                                           height={props.size.h}
                                       />
                                   }
 
                                   {
-                                      displayRecoveryPeriods && incident.recovery &&
+                                      displayRecoveryPeriods && cpuAlert.recovery &&
                                       <rect
                                           className={`${componentName}_recoveryPeriod`}
-                                          x={getXFromTimestamp(props.snapshots,incident.recovery.start)}
+                                          x={getXFromTimestamp(cpuAlert.recovery.start)}
                                           y={0}
-                                          opacity={(incident == props.selectedIncident)?0.5:0.2}
-                                          width={getXFromTimestamp(props.snapshots,incident.recovery.end) - getXFromTimestamp(props.snapshots,incident.recovery.start)}
+                                          opacity={(cpuAlert == props.selectedAlert)?0.5:0.2}
+                                          width={getXFromTimestamp(cpuAlert.recovery.end) - getXFromTimestamp(cpuAlert.recovery.start)}
                                           height={props.size.h}
                                       />
                                   }
@@ -250,7 +237,7 @@ function SvgGraph (props: IProps) {
                       strokeWidth={4}
                       d={
                           d3.line()(props.snapshots.map((snap)=>{
-                              return [getXFromTimestamp(props.snapshots,snap.timestamp),getYFromLoad(props.snapshots,snap.load)];
+                              return [getXFromTimestamp(snap.timestamp),getYFromLoad(snap.load)];
                           }))
                       }
                   />
@@ -259,11 +246,11 @@ function SvgGraph (props: IProps) {
                   displaySnapshots &&
                   props.snapshots.map((snapshot,index)=>{
                       {
-                          return (peaks.indexOf(snapshot)!=-1)? <circle
+                          return (1)? <circle
                               key={index}
-                              className={`${componentName}_snapshot ${focusSnapshot == snapshot?componentName+'_snapshot-focus':""}`}
-                              cx={getXFromTimestamp(props.snapshots,snapshot.timestamp)}
-                              cy={getYFromLoad(props.snapshots,snapshot.load)}
+                              className={`${componentName}_snapshot ${peaks.indexOf(snapshot)!=-1?`${componentName}_snapshot-peak`:""} ${focusSnapshot == snapshot?componentName+'_snapshot-focus':""}`}
+                              cx={getXFromTimestamp(snapshot.timestamp)}
+                              cy={getYFromLoad(snapshot.load)}
                               r={4}
                               onClick={()=>{setFocusSnapshot(snapshot)}}
 
@@ -279,7 +266,7 @@ function SvgGraph (props: IProps) {
                       <line
                         x1={0}
                         x2={0}
-                        y1={getYFromLoad(props.snapshots,focusSnapshot.load)}
+                        y1={getYFromLoad(focusSnapshot.load)}
                         y2={props.size.h}
                         strokeDasharray={"5 5"}
                         stroke={"#cccccc"}
@@ -311,7 +298,8 @@ function SvgGraph (props: IProps) {
           className={`${componentName}_axisName ${componentName}_axisName-cpu`}
       >CPU load</h3>
       <h3 className={`${componentName}_axisName ${componentName}_axisName-timeline`}>HH:MM</h3>
-      {/*TODO:refacto*/}
+
+
       <h2 className={`${componentName}_displayButtonsTitle`}>Display / hide graph elements</h2>
       <div className={`${componentName}_displayButtons`}>
           <SwitchButton
@@ -345,6 +333,7 @@ function SvgGraph (props: IProps) {
           />
 
       </div>
+
 
     </div>
 }
