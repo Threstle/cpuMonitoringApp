@@ -7,21 +7,22 @@ let config = {
 
         url: 'http://localhost:8080',
 
-        // la taille max d'une requête POST
         maxPostSize: '50mb',
 
         appPath:"/back",
     },
 
     cpuWatch:{
-        bufferTime: 120,
+        // If the cpu load stays above this threshold for heavyload_duration or more it is considered on heavy load
+        heavyload_threshold: 1,
 
-        heavyload_threshold: 0.6,
+        // Time in ms cpu has to stay above threshold to be considered on heavy load
+        heavyload_duration: 120000,
 
-        heavyload_duration: 1200,
+        // Time in ms cpu has to stay below threshold to recover from heavy load
+        recovery_duration: 120000,
 
-        recovery_duration: 1200,
-
+        // Maximum time in ms every data is kept
         timeline_length: 600000
     }
 

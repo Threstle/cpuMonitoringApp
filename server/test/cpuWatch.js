@@ -88,7 +88,7 @@ describe('#updateIncidents()', function() {
             },
         )
 
-        it('state should now be RECOVERED, alertList.length should be 1 ans currentAlert should be null', function() {
+        it('state should now be IDLE, alertList.length should be 1 ans currentAlert should be null', function() {
             expect(res.serverState).to.equal("IDLE")
             expect(res.alertList.length).to.equal(1)
             expect(res.currentAlert).to.equal(null);

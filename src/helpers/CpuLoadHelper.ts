@@ -16,7 +16,6 @@ export interface IAlert {
 }
 
 export interface IConfig {
-    bufferTime:number,
     heavyload_threshold:number,
     heavyload_duration:number,
     recovery_duration:number,
